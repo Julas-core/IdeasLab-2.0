@@ -3,6 +3,8 @@ import type { Problem, Solution, Sentiment } from '../types';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
+const ALLOWED_CATEGORIES = ['Technology', 'Healthcare', 'Productivity', 'Environment', 'Urban Living', 'Finance', 'Education', 'Social', 'Entertainment'];
+
 const getSentiment = (score: number): Sentiment => {
     if (score > 0.3) return 'Positive' as Sentiment.Positive;
     if (score < -0.3) return 'Negative' as Sentiment.Negative;
@@ -16,6 +18,7 @@ export const fetchProblems = async (): Promise<Problem[]> => {
         Act as a market research analyst. Use Google Search to find real-world problems people are discussing online.
         Scour forums (like Reddit, Hacker News), social media, and YouTube comments. Identify 7 pressing problems or inefficiencies that are ideal for an AI-powered solution.
         For each problem, provide a concise title, a one-paragraph description, a relevant category, and at least two source URLs where this problem is being discussed.
+        The "category" for each problem MUST be one of the following strings: ${ALLOWED_CATEGORIES.map(c => `'${c}'`).join(', ')}.
         Return your findings STRICTLY as a JSON array of objects. Each object must have keys: "title", "description", "category", and "sources" (an array of URL strings). Do not output any text before or after the JSON array.
         `;
 

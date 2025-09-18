@@ -2,12 +2,14 @@
 import React from 'react';
 import type { Problem } from '../types';
 import { Sentiment } from '../types';
-import { ArrowUpIcon, FireIcon } from './icons/AllIcons';
+import { ArrowUpIcon, FireIcon, BookmarkIcon } from './icons/AllIcons';
 
 interface ProblemCardProps {
     problem: Problem;
     isSelected: boolean;
     onSelect: () => void;
+    isInWatchlist: boolean;
+    onToggleWatchlist: () => void;
 }
 
 const SentimentIndicator: React.FC<{ sentiment: Sentiment }> = ({ sentiment }) => {
@@ -30,11 +32,16 @@ const SentimentIndicator: React.FC<{ sentiment: Sentiment }> = ({ sentiment }) =
     return <span className={`text-xl ${style.color}`}>{style.icon}</span>;
 };
 
-const ProblemCard: React.FC<ProblemCardProps> = ({ problem, isSelected, onSelect }) => {
+const ProblemCard: React.FC<ProblemCardProps> = ({ problem, isSelected, onSelect, isInWatchlist, onToggleWatchlist }) => {
     const { title, category, upvotes, sentiment, trendScore } = problem;
     const selectedClasses = isSelected 
         ? 'bg-cyan-500/20 border-cyan-400/80 ring-2 ring-cyan-500/50' 
         : 'bg-gray-700/30 border-gray-700/60 hover:bg-gray-700/50 hover:border-gray-600';
+
+    const handleWatchlistClick = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent card selection when clicking the bookmark
+        onToggleWatchlist();
+    };
 
     return (
         <div
@@ -49,10 +56,17 @@ const ProblemCard: React.FC<ProblemCardProps> = ({ problem, isSelected, onSelect
                 <SentimentIndicator sentiment={sentiment} />
             </div>
             <div className="flex justify-between items-center mt-3 text-sm text-gray-400">
-                <div className="flex items-center gap-2">
-                    <button className="flex items-center gap-1 text-green-400 hover:text-green-300 transition-colors">
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1 text-green-400">
                         <ArrowUpIcon className="w-4 h-4" />
                         <span>{upvotes.toLocaleString()}</span>
+                    </div>
+                    <button 
+                        onClick={handleWatchlistClick} 
+                        title={isInWatchlist ? "Remove from watchlist" : "Add to watchlist"}
+                        className="text-yellow-400 hover:text-yellow-300 transition-colors"
+                    >
+                        <BookmarkIcon className="w-5 h-5" solid={isInWatchlist} />
                     </button>
                 </div>
                  <div className="flex items-center gap-1 text-orange-400" title="Trend Score">

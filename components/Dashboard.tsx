@@ -9,9 +9,12 @@ import { PlusIcon, FireIcon } from './icons/AllIcons';
 
 interface DashboardProps {
     selectedCategory: string;
+    activeView: string;
+    watchlist: string[];
+    onToggleWatchlist: (problemId: string) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ selectedCategory }) => {
+const Dashboard: React.FC<DashboardProps> = ({ selectedCategory, activeView, watchlist, onToggleWatchlist }) => {
     const [problems, setProblems] = useState<Problem[]>([]);
     const [selectedProblem, setSelectedProblem] = useState<Problem | null>(null);
     const [solutions, setSolutions] = useState<Solution[]>([]);
@@ -31,11 +34,15 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedCategory }) => {
     }, []);
 
     const filteredProblems = useMemo(() => {
+        const baseProblems = activeView === 'My Watchlist' 
+            ? problems.filter(p => watchlist.includes(p.id))
+            : problems;
+
         if (selectedCategory === 'All Categories') {
-            return problems;
+            return baseProblems;
         }
-        return problems.filter(p => p.category === selectedCategory);
-    }, [problems, selectedCategory]);
+        return baseProblems.filter(p => p.category === selectedCategory);
+    }, [problems, selectedCategory, activeView, watchlist]);
 
     useEffect(() => {
         // If the current selectedProblem is not in the filtered list,
@@ -73,13 +80,20 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedCategory }) => {
             .map(p => ({ name: p.title.split(' ').slice(0, 2).join(' '), trend: p.trendScore })),
     [filteredProblems]);
 
+    const getEmptyStateMessage = () => {
+        if (activeView === 'My Watchlist') {
+            return "Your watchlist is empty. Add problems to see them here.";
+        }
+        return `No problems found in "${selectedCategory}".`;
+    }
+
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
             <div className="lg:col-span-1 flex flex-col gap-6 h-full">
                 <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50 flex-shrink-0">
                     <h2 className="text-xl font-bold text-cyan-300 mb-4 flex items-center">
                         <FireIcon className="w-6 h-6 mr-2" />
-                        Trending Problems
+                        {activeView === 'My Watchlist' ? 'My Watchlist' : 'Trending Problems'}
                     </h2>
                     {isLoadingProblems ? (
                         <div className="space-y-4">
@@ -96,11 +110,13 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedCategory }) => {
                                         problem={problem}
                                         isSelected={selectedProblem?.id === problem.id}
                                         onSelect={() => handleSelectProblem(problem)}
+                                        isInWatchlist={watchlist.includes(problem.id)}
+                                        onToggleWatchlist={() => onToggleWatchlist(problem.id)}
                                     />
                                 ))
                             ) : (
                                 <div className="text-center text-gray-500 py-8">
-                                    No problems found in "{selectedCategory}".
+                                    {getEmptyStateMessage()}
                                 </div>
                             )}
                         </div>

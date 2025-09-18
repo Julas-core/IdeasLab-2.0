@@ -6,9 +6,11 @@ interface SidebarProps {
   categories: string[];
   selectedCategory: string;
   onCategoryChange: (category: string) => void;
+  activeView: string;
+  onViewChange: (view: string) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ categories, selectedCategory, onCategoryChange }) => {
+const Sidebar: React.FC<SidebarProps> = ({ categories, selectedCategory, onCategoryChange, activeView, onViewChange }) => {
   const navItems = ['Dashboard', 'My Watchlist', 'Challenges', 'Reports', 'API Access'];
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -36,13 +38,26 @@ const Sidebar: React.FC<SidebarProps> = ({ categories, selectedCategory, onCateg
         <div>
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Menu</h3>
           <ul className="space-y-1">
-            {navItems.map((item, index) => (
+            {navItems.map((item) => {
+              const isActive = activeView === item;
+              const isClickable = item === 'Dashboard' || item === 'My Watchlist';
+              return (
               <li key={item}>
-                <a href="#" className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${index === 0 ? 'bg-gray-700/50 text-white' : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'}`}>
+                <button
+                  onClick={() => isClickable && onViewChange(item)}
+                  disabled={!isClickable}
+                  className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors text-left ${
+                    isActive 
+                      ? 'bg-gray-700/50 text-white' 
+                      : isClickable 
+                        ? 'text-gray-400 hover:bg-gray-800/50 hover:text-white' 
+                        : 'text-gray-600 cursor-not-allowed'
+                  }`}
+                >
                   {item}
-                </a>
+                </button>
               </li>
-            ))}
+            )})}
           </ul>
         </div>
         <div className="pt-4">
