@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import type { Solution } from '../types';
-import { KeyIcon, ClipboardIcon } from './icons/AllIcons';
+import type { Problem, Solution } from '../types';
+import { KeyIcon, ClipboardIcon, DownloadIcon } from './icons/AllIcons';
 
 interface SolutionCardProps {
     solution: Solution;
+    problem: Problem;
 }
 
-const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
+const SolutionCard: React.FC<SolutionCardProps> = ({ solution, problem }) => {
     const { title, description, effectivenessScore, noCodePrompt, noCodePromptJson } = solution;
     const [isPromptVisible, setIsPromptVisible] = useState(false);
     const [activePrompt, setActivePrompt] = useState<'formatted' | 'json'>('formatted');
@@ -29,6 +30,52 @@ const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
             setTimeout(() => setCopied(false), 2000);
         }
     };
+
+    const handleDownload = () => {
+        const fileName = `${problem.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_solution.md`;
+        
+        const markdownContent = `
+# Problem: ${problem.title}
+
+**Category:** ${problem.category} | **Sentiment:** ${problem.sentiment} (${problem.sentimentScore.toFixed(2)}) | **Trend:** ${problem.trendScore.toFixed(1)}/10 | **Upvotes:** ${problem.upvotes.toLocaleString()}
+
+## Description
+${problem.description}
+
+${problem.sources && problem.sources.length > 0 ? `
+## Sources
+${problem.sources.map(s => `- [${s}](${s})`).join('\n')}
+` : ''}
+
+---
+
+# Solution: ${title}
+
+**Effectiveness Score:** ${effectivenessScore}/100
+
+## Description
+${description}
+
+## Pro Builder Prompt (Formatted)
+${noCodePrompt}
+
+## Pro Builder Prompt (JSON)
+\`\`\`json
+${JSON.stringify(noCodePromptJson, null, 2)}
+\`\`\`
+      `.trim();
+
+      const blob = new Blob([markdownContent], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+
 
     return (
         <div className="bg-gray-700/40 p-5 rounded-lg border border-gray-700/60 hover:border-gray-600 transition-all duration-200">
@@ -93,10 +140,16 @@ const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
                                     JSON
                                 </button>
                             </div>
-                             <button onClick={handleCopy} className="flex items-center gap-1.5 text-xs bg-gray-600/50 hover:bg-gray-600 px-2 py-1 rounded text-gray-300 hover:text-white transition-all duration-200">
-                                <ClipboardIcon className="w-4 h-4"/>
-                                {copied ? 'Copied!' : 'Copy'}
-                            </button>
+                             <div className="flex items-center gap-2">
+                                <button onClick={handleCopy} className="flex items-center gap-1.5 text-xs bg-gray-600/50 hover:bg-gray-600 px-2 py-1 rounded text-gray-300 hover:text-white transition-all duration-200">
+                                    <ClipboardIcon className="w-4 h-4"/>
+                                    {copied ? 'Copied!' : 'Copy'}
+                                </button>
+                                <button onClick={handleDownload} className="flex items-center gap-1.5 text-xs bg-gray-600/50 hover:bg-gray-600 px-2 py-1 rounded text-gray-300 hover:text-white transition-all duration-200">
+                                    <DownloadIcon className="w-4 h-4"/>
+                                    Download
+                                </button>
+                            </div>
                         </div>
                         <pre className="bg-gray-900/70 p-4 rounded-md text-sm text-gray-200 whitespace-pre-wrap font-mono max-h-48 overflow-y-auto">
                             <code>

@@ -89,7 +89,7 @@ const ProblemDetailView: React.FC<ProblemDetailViewProps> = ({ problem, solution
                 ) : (
                     <div className="space-y-4">
                         {solutions.map((solution, index) => (
-                            <SolutionCard key={index} solution={solution} />
+                            <SolutionCard key={index} solution={solution} problem={problem} />
                         ))}
                          {solutions.length === 0 && <p className="text-gray-500">No solutions generated yet.</p>}
                     </div>
