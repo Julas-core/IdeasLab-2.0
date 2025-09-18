@@ -1,4 +1,4 @@
-# Nexus AI Problem Solver
+# IdeasLab2.0
 
 An AI-powered platform designed to discover, analyze, and generate innovative solutions for real-world problems. Nexus AI leverages the Google Gemini API to scour the web for trending issues and then proposes actionable, AI-driven solutions.
 
