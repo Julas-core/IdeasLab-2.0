@@ -7,7 +7,11 @@ import ProblemDetailView from './ProblemDetailView';
 import TrendChart from './TrendChart';
 import { PlusIcon, FireIcon } from './icons/AllIcons';
 
-const Dashboard: React.FC = () => {
+interface DashboardProps {
+    selectedCategory: string;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ selectedCategory }) => {
     const [problems, setProblems] = useState<Problem[]>([]);
     const [selectedProblem, setSelectedProblem] = useState<Problem | null>(null);
     const [solutions, setSolutions] = useState<Solution[]>([]);
@@ -17,10 +21,7 @@ const Dashboard: React.FC = () => {
     const memoizedFetchProblems = useCallback(async () => {
         setIsLoadingProblems(true);
         const fetchedProblems = await fetchProblems();
-        if (fetchedProblems.length > 0) {
-            setProblems(fetchedProblems);
-            setSelectedProblem(fetchedProblems[0]);
-        }
+        setProblems(fetchedProblems);
         setIsLoadingProblems(false);
     }, []);
 
@@ -28,6 +29,23 @@ const Dashboard: React.FC = () => {
         memoizedFetchProblems();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const filteredProblems = useMemo(() => {
+        if (selectedCategory === 'All Categories') {
+            return problems;
+        }
+        return problems.filter(p => p.category === selectedCategory);
+    }, [problems, selectedCategory]);
+
+    useEffect(() => {
+        // If the current selectedProblem is not in the filtered list,
+        // or if no problem is selected, default to the first problem in the filtered list.
+        const isSelectedProblemInFilteredList = selectedProblem && filteredProblems.some(p => p.id === selectedProblem.id);
+        
+        if (!isSelectedProblemInFilteredList) {
+            setSelectedProblem(filteredProblems.length > 0 ? filteredProblems[0] : null);
+        }
+    }, [filteredProblems, selectedProblem]);
 
     useEffect(() => {
         if (selectedProblem) {
@@ -39,6 +57,8 @@ const Dashboard: React.FC = () => {
                 setIsLoadingSolutions(false);
             };
             fetchSolutions();
+        } else {
+            setSolutions([]); // Clear solutions if no problem is selected
         }
     }, [selectedProblem]);
 
@@ -47,11 +67,11 @@ const Dashboard: React.FC = () => {
     };
     
     const trendData: TrendData[] = useMemo(() => 
-        problems
+        filteredProblems
             .slice(0, 5)
             .sort((a, b) => b.trendScore - a.trendScore)
             .map(p => ({ name: p.title.split(' ').slice(0, 2).join(' '), trend: p.trendScore })),
-    [problems]);
+    [filteredProblems]);
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
@@ -69,14 +89,20 @@ const Dashboard: React.FC = () => {
                         </div>
                     ) : (
                         <div className="space-y-3 max-h-[calc(100vh-350px)] overflow-y-auto pr-2">
-                           {problems.map(problem => (
-                                <ProblemCard 
-                                    key={problem.id}
-                                    problem={problem}
-                                    isSelected={selectedProblem?.id === problem.id}
-                                    onSelect={() => handleSelectProblem(problem)}
-                                />
-                            ))}
+                           {filteredProblems.length > 0 ? (
+                                filteredProblems.map(problem => (
+                                    <ProblemCard 
+                                        key={problem.id}
+                                        problem={problem}
+                                        isSelected={selectedProblem?.id === problem.id}
+                                        onSelect={() => handleSelectProblem(problem)}
+                                    />
+                                ))
+                            ) : (
+                                <div className="text-center text-gray-500 py-8">
+                                    No problems found in "{selectedCategory}".
+                                </div>
+                            )}
                         </div>
                     )}
                      <button 

@@ -21,6 +21,7 @@ export interface Solution {
   description: string;
   effectivenessScore: number;
   noCodePrompt: string;
+  noCodePromptJson: object;
 }
 
 export interface TrendData {

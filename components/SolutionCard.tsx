@@ -7,8 +7,9 @@ interface SolutionCardProps {
 }
 
 const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
-    const { title, description, effectivenessScore, noCodePrompt } = solution;
+    const { title, description, effectivenessScore, noCodePrompt, noCodePromptJson } = solution;
     const [isPromptVisible, setIsPromptVisible] = useState(false);
+    const [activePrompt, setActivePrompt] = useState<'formatted' | 'json'>('formatted');
     const [copied, setCopied] = useState(false);
 
     const getScoreColor = (score: number) => {
@@ -18,8 +19,12 @@ const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
     };
 
     const handleCopy = () => {
-        if (noCodePrompt) {
-            navigator.clipboard.writeText(noCodePrompt);
+        const textToCopy = activePrompt === 'formatted' 
+            ? noCodePrompt 
+            : JSON.stringify(noCodePromptJson, null, 2);
+
+        if (textToCopy) {
+            navigator.clipboard.writeText(textToCopy);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         }
@@ -66,27 +71,40 @@ const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
             </div>
             
             <div className="mt-4 pt-4 border-t border-gray-600/50">
-                {!isPromptVisible ? (
-                    <button 
-                        onClick={() => setIsPromptVisible(true)}
-                        className="w-full flex items-center justify-center gap-2 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-300 font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
-                        <KeyIcon className="w-5 h-5"/>
-                        <span>View Pro Builder Prompt</span>
-                    </button>
-                ) : (
-                    <div>
+                <button 
+                    onClick={() => setIsPromptVisible(!isPromptVisible)}
+                    className="w-full flex items-center justify-center gap-2 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-300 font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
+                    <KeyIcon className="w-5 h-5"/>
+                    <span>{isPromptVisible ? 'Hide Pro Builder Prompt' : 'View Pro Builder Prompt'}</span>
+                </button>
+
+                {isPromptVisible && (
+                    <div className="mt-4">
                         <div className="flex justify-between items-center mb-2">
-                            <h5 className="text-sm font-bold text-yellow-300 flex items-center gap-2">
-                               <KeyIcon className="w-5 h-5"/>
-                               AI No-Code Builder Prompt
-                            </h5>
+                            <div className="flex border border-gray-600 rounded-md p-0.5 bg-gray-900/50">
+                                <button 
+                                    onClick={() => setActivePrompt('formatted')}
+                                    className={`px-3 py-1 text-sm rounded transition-colors duration-200 ${activePrompt === 'formatted' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800'}`}>
+                                    Formatted
+                                </button>
+                                <button 
+                                    onClick={() => setActivePrompt('json')}
+                                    className={`px-3 py-1 text-sm rounded transition-colors duration-200 ${activePrompt === 'json' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800'}`}>
+                                    JSON
+                                </button>
+                            </div>
                              <button onClick={handleCopy} className="flex items-center gap-1.5 text-xs bg-gray-600/50 hover:bg-gray-600 px-2 py-1 rounded text-gray-300 hover:text-white transition-all duration-200">
                                 <ClipboardIcon className="w-4 h-4"/>
                                 {copied ? 'Copied!' : 'Copy'}
                             </button>
                         </div>
                         <pre className="bg-gray-900/70 p-4 rounded-md text-sm text-gray-200 whitespace-pre-wrap font-mono max-h-48 overflow-y-auto">
-                            <code>{noCodePrompt}</code>
+                            <code>
+                                {activePrompt === 'formatted' 
+                                    ? noCodePrompt 
+                                    : JSON.stringify(noCodePromptJson, null, 2)
+                                }
+                            </code>
                         </pre>
                     </div>
                 )}
