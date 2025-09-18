@@ -1,15 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
-import HeroSection from './components/HeroSection';
-import TestimonialsSection from './components/TestimonialsSection';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
+import Heatmap from './components/Heatmap';
 
 const App: React.FC = () => {
   const categories = ['All Categories', 'Technology', 'Healthcare', 'Productivity', 'Environment', 'Urban Living', 'Finance', 'Education', 'Social', 'Entertainment'];
   const [selectedCategory, setSelectedCategory] = useState<string>('All Categories');
-  const [activeView, setActiveView] = useState<string>('Home');
+  const [activeView, setActiveView] = useState<string>('Dashboard');
   const [watchlist, setWatchlist] = useState<string[]>([]);
 
   // Load watchlist from localStorage on initial render
@@ -42,35 +41,29 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-gray-200 font-sans">
-      {activeView === 'Home' ? (
-        <>
-          <Header />
-          <HeroSection />
-          <TestimonialsSection />
-        </>
-      ) : (
-        <>
-          <Header />
-          <div className="flex flex-1">
-            <Sidebar 
-              categories={categories}
-              selectedCategory={selectedCategory}
-              onCategoryChange={setSelectedCategory}
+    <div className="min-h-screen flex flex-col bg-gray-900 text-gray-200 font-sans">
+      <Header />
+      <div className="flex flex-1">
+        <Sidebar 
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          activeView={activeView}
+          onViewChange={setActiveView}
+        />
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+          {activeView === 'Heatmap' ? (
+            <Heatmap selectedCategory={selectedCategory} />
+          ) : (
+            <Dashboard 
+              selectedCategory={selectedCategory} 
               activeView={activeView}
-              onViewChange={setActiveView}
+              watchlist={watchlist}
+              onToggleWatchlist={handleToggleWatchlist}
             />
-            <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-              <Dashboard 
-                selectedCategory={selectedCategory} 
-                activeView={activeView}
-                watchlist={watchlist}
-                onToggleWatchlist={handleToggleWatchlist}
-              />
-            </main>
-          </div>
-        </>
-      )}
+          )}
+        </main>
+      </div>
     </div>
   );
 };

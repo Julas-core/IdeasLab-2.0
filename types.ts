@@ -14,6 +14,9 @@ export interface Problem {
   trendScore: number;
   upvotes: number;
   sources?: string[];
+  locationName?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface Solution {
