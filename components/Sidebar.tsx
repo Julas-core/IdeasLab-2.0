@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDownIcon } from './icons/AllIcons';
 
@@ -11,7 +10,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ categories, selectedCategory, onCategoryChange, activeView, onViewChange }) => {
-  const navItems = ['Dashboard', 'My Watchlist', 'Heatmap', 'Challenges', 'Reports', 'API Access'];
+  const navItems = ['Dashboard', 'My Watchlist', 'Marketplace', 'Challenges', 'Heatmap', 'API Access'];
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -40,7 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({ categories, selectedCategory, onCateg
           <ul className="space-y-1">
             {navItems.map((item) => {
               const isActive = activeView === item;
-              const isClickable = item === 'Dashboard' || item === 'My Watchlist' || item === 'Heatmap';
+              const isClickable = ['Dashboard', 'My Watchlist', 'Heatmap', 'Challenges', 'Marketplace'].includes(item);
               return (
               <li key={item}>
                 <button

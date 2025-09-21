@@ -1,16 +1,90 @@
-import React from 'react';
-import type { Problem, Solution } from '../types';
+import React, { useState } from 'react';
+import type { Problem, Solution, User } from '../types';
 import { Sentiment } from '../types';
 import SolutionCard from './SolutionCard';
-import { LightBulbIcon, LinkIcon } from './icons/AllIcons';
+import { LightBulbIcon, SearchIcon, TrophyIcon, PlusIcon } from './icons/AllIcons';
 
 interface ProblemDetailViewProps {
     problem: Problem | null;
     solutions: Solution[];
     isLoading: boolean;
+    onGenerateChallenge: (problem: Problem) => void;
+    isGeneratingChallenge: boolean;
+    onAddSolution: (problemId: string, title: string, description: string) => void;
+    onUpvoteSolution: (problemId: string, solutionId: string) => void;
+    onUpdateSolution: (problemId: string, solutionId: string, newTitle: string, newDescription: string) => void;
+    currentUser: User;
+    onViewSolutionFullscreen: (problem: Problem, solution: Solution) => void;
 }
 
-const ProblemDetailView: React.FC<ProblemDetailViewProps> = ({ problem, solutions, isLoading }) => {
+const SubmitSolutionForm: React.FC<{ onSubmit: (title: string, description: string) => void }> = ({ onSubmit }) => {
+    const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (title.trim() && description.trim()) {
+            onSubmit(title.trim(), description.trim());
+            setTitle('');
+            setDescription('');
+            setIsExpanded(false);
+        }
+    };
+
+    if (!isExpanded) {
+        return (
+             <button
+                onClick={() => setIsExpanded(true)}
+                className="w-full flex items-center justify-center gap-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 font-semibold py-2.5 px-4 rounded-lg transition-colors duration-200">
+                <PlusIcon className="w-5 h-5"/>
+                Submit Your Solution
+            </button>
+        )
+    }
+
+    return (
+        <form onSubmit={handleSubmit} className="bg-gray-700/30 p-4 rounded-lg border border-gray-700/50">
+            <h3 className="text-lg font-semibold text-gray-200 mb-3">Submit Your Solution</h3>
+            <div className="space-y-3">
+                <input
+                    type="text"
+                    placeholder="Solution Title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                    className="w-full bg-gray-800/70 border border-gray-600 rounded-md py-2 px-3 text-gray-200 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                />
+                <textarea
+                    placeholder="Describe your solution..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    required
+                    rows={3}
+                    className="w-full bg-gray-800/70 border border-gray-600 rounded-md py-2 px-3 text-gray-200 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                />
+            </div>
+            <div className="flex justify-end gap-3 mt-4">
+                 <button 
+                    type="button"
+                    onClick={() => setIsExpanded(false)}
+                    className="bg-gray-600/50 hover:bg-gray-600 text-gray-300 font-semibold py-2 px-4 rounded-lg transition-colors">
+                    Cancel
+                </button>
+                <button 
+                    type="submit"
+                    className="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
+                    disabled={!title.trim() || !description.trim()}
+                >
+                    Submit
+                </button>
+            </div>
+        </form>
+    );
+};
+
+
+const ProblemDetailView: React.FC<ProblemDetailViewProps> = ({ problem, solutions, isLoading, onGenerateChallenge, isGeneratingChallenge, onAddSolution, onUpvoteSolution, onUpdateSolution, currentUser, onViewSolutionFullscreen }) => {
     if (!problem) {
         return (
             <div className="h-full flex items-center justify-center bg-gray-800/50 rounded-xl border border-gray-700/50">
@@ -26,6 +100,8 @@ const ProblemDetailView: React.FC<ProblemDetailViewProps> = ({ problem, solution
             default: return 'text-yellow-400';
         }
     }
+    
+    const sortedSolutions = [...solutions].sort((a, b) => b.upvotes - a.upvotes);
     
     return (
         <div className="bg-gray-800/50 rounded-xl p-6 md:p-8 border border-gray-700/50 h-full overflow-y-auto">
@@ -49,32 +125,45 @@ const ProblemDetailView: React.FC<ProblemDetailViewProps> = ({ problem, solution
 
             <p className="text-gray-300 leading-relaxed mb-6">{problem.description}</p>
             
-            {problem.sources && problem.sources.length > 0 && (
+            {problem.searchQueries && problem.searchQueries.length > 0 && (
                  <div className="mb-8">
                     <h3 className="text-md font-bold text-gray-300 mb-3 flex items-center gap-2">
-                        <LinkIcon className="w-5 h-5" />
-                        Sources
+                        <SearchIcon className="w-5 h-5" />
+                        Related Searches
                     </h3>
                     <div className="flex flex-col gap-2">
-                       {problem.sources.map((source, index) => (
+                       {problem.searchQueries.map((query, index) => (
                            <a 
                                 key={index} 
-                                href={source} 
+                                href={`https://www.google.com/search?q=${encodeURIComponent(query)}`}
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="text-sm text-cyan-400 hover:text-cyan-300 hover:underline truncate transition-colors"
+                                title={`Search for: "${query}"`}
                            >
-                               {source}
+                               "{query}"
                            </a>
                        ))}
                     </div>
                 </div>
             )}
-
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                 <SubmitSolutionForm onSubmit={(title, description) => onAddSolution(problem.id, title, description)} />
+                 <button 
+                    onClick={() => onGenerateChallenge(problem)}
+                    disabled={isGeneratingChallenge}
+                    className="w-full flex items-center justify-center gap-2 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-300 font-semibold py-2.5 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <TrophyIcon className="w-5 h-5"/>
+                    {isGeneratingChallenge ? 'Generating...' : 'Create Challenge'}
+                </button>
+            </div>
+           
             <div className="border-t border-gray-700/50 pt-8">
                 <h2 className="text-xl font-bold text-cyan-300 mb-6 flex items-center gap-2">
                     <LightBulbIcon className="w-6 h-6"/>
-                    AI-Generated Solutions
+                    Solution Marketplace ({solutions.length})
                 </h2>
                 {isLoading ? (
                     <div className="space-y-4">
@@ -88,10 +177,18 @@ const ProblemDetailView: React.FC<ProblemDetailViewProps> = ({ problem, solution
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {solutions.map((solution, index) => (
-                            <SolutionCard key={index} solution={solution} problem={problem} />
+                        {sortedSolutions.map((solution) => (
+                            <SolutionCard 
+                                key={solution.id} 
+                                solution={solution} 
+                                problem={problem} 
+                                onUpvote={() => onUpvoteSolution(problem.id, solution.id)}
+                                onUpdateSolution={(solutionId, title, description) => onUpdateSolution(problem.id, solutionId, title, description)}
+                                currentUser={currentUser}
+                                onViewFullscreen={() => onViewSolutionFullscreen(problem, solution)}
+                             />
                         ))}
-                         {solutions.length === 0 && <p className="text-gray-500">No solutions generated yet.</p>}
+                         {solutions.length === 0 && <p className="text-gray-500">No solutions yet. Be the first to submit one!</p>}
                     </div>
                 )}
             </div>

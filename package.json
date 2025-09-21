@@ -15,7 +15,8 @@
     "recharts": "2.12.7",
     "leaflet": "1.9.4",
     "react-leaflet": "4.2.1",
-    "leaflet.markercluster": "1.5.3"
+    "leaflet.markercluster": "1.5.3",
+    "firebase": "^12.3.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
